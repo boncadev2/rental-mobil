@@ -1,0 +1,55 @@
+services:
+  app:
+    build: .
+    container_name: rental-mobil-app
+    working_dir: /var/www/html
+    volumes: [./:/var/www/html]
+    depends_on:
+      mysql:
+        condition: service_healthy
+  web:
+    image: nginx:1.29-alpine
+    container_name: rental-mobil-web
+    ports: ["8000:80"]
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [app]
+  mysql:
+    image: mysql:8.4
+    container_name: rental-mobil-mysql
+    ports: ["3307:3306"]
+    environment:
+      MYSQL_DATABASE: rental_mobil
+      MYSQL_USER: rental_user
+      MYSQL_PASSWORD: rental_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes: [mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: rental-mobil-phpmyadmin
+    ports: ["8080:80"]
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 0
+    depends_on:
+      mysql:
+        condition: service_healthy
+  vite:
+    image: node:22-alpine
+    container_name: rental-mobil-vite
+    working_dir: /var/www/html
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports: ["5173:5173"]
+    volumes:
+      - ./:/var/www/html
+      - node_modules:/var/www/html/node_modules
+volumes:
+  mysql_data:
+  node_modules:

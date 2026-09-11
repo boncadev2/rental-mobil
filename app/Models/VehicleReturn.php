@@ -1,0 +1,2 @@
+<?php
+namespace App\Models;use Illuminate\Database\Eloquent\Model;use Illuminate\Database\Eloquent\Relations\HasMany;class VehicleReturn extends Model{protected $fillable=['booking_id','vehicle_id','checked_by','return_datetime','odometer','fuel_level','late_minutes','late_fee','damage_fee','fuel_fee','cleaning_fee','total_additional_charge','notes'];public function items():HasMany{return $this->hasMany(VehicleReturnItem::class);}}

@@ -1,0 +1,2 @@
+<?php
+namespace App\Models;use Illuminate\Database\Eloquent\Model;use Illuminate\Database\Eloquent\Relations\HasMany;use Illuminate\Database\Eloquent\Relations\BelongsTo;class VehicleCheckout extends Model{protected $fillable=['booking_id','vehicle_id','checked_by','checkout_datetime','odometer','fuel_level','notes'];public function items():HasMany{return $this->hasMany(VehicleCheckoutItem::class);}public function booking():BelongsTo{return $this->belongsTo(Booking::class);}public function vehicle():BelongsTo{return $this->belongsTo(Vehicle::class);}}

@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\Relations\BelongsTo; use Illuminate\Database\Eloquent\Relations\HasMany;
+class Customer extends Model {protected $fillable=['user_id','customer_code','full_name','email','phone','address','ktp_file_path','phone_verified_at','ktp_verified_at','phone_verification_code','phone_verification_expires_at','status']; protected function casts():array{return ['phone_verified_at'=>'datetime','ktp_verified_at'=>'datetime','phone_verification_expires_at'=>'datetime'];} public function user():BelongsTo{return $this->belongsTo(User::class);} public function bookings():HasMany{return $this->hasMany(Booking::class);}}

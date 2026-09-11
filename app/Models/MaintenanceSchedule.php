@@ -1,0 +1,2 @@
+<?php
+namespace App\Models;use Illuminate\Database\Eloquent\Model;use Illuminate\Database\Eloquent\Relations\BelongsTo;class MaintenanceSchedule extends Model{protected $fillable=['vehicle_id','maintenance_type_id','next_service_date','next_service_odometer','status'];protected $casts=['next_service_date'=>'date'];public function vehicle():BelongsTo{return $this->belongsTo(Vehicle::class);}public function maintenanceType():BelongsTo{return $this->belongsTo(MaintenanceType::class);}}

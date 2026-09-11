@@ -1,0 +1,18 @@
+import { Head, Link } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+import PublicLayout from '@/Layouts/PublicLayout';
+
+export default function Show({ vehicle }) {
+    const images = useMemo(() => [...(vehicle.images || [])].sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order), [vehicle.images]);
+    const [activeImage, setActiveImage] = useState(0);
+    const goTo = (index) => setActiveImage((index + images.length) % images.length);
+
+    useEffect(() => {
+        if (images.length < 2) return undefined;
+
+        const timer = window.setInterval(() => setActiveImage((current) => (current + 1) % images.length), 4500);
+        return () => window.clearInterval(timer);
+    }, [images.length]);
+
+    return <PublicLayout><Head title={`${vehicle.brand} ${vehicle.model}`} /><main className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-2"><section><div className="relative flex min-h-80 items-center justify-center overflow-hidden rounded-2xl bg-slate-200">{images.length ? <img className="h-full w-full object-cover transition-opacity duration-500" src={`/storage/${images[activeImage].file_path}`} alt={`${vehicle.brand} ${vehicle.model} — foto ${activeImage + 1}`} /> : <span>Foto kendaraan</span>}{images.length > 1 && <><button type="button" onClick={() => goTo(activeImage - 1)} aria-label="Foto sebelumnya" className="absolute left-4 grid h-10 w-10 place-items-center rounded-full bg-black/50 text-xl text-white transition hover:bg-black/70">‹</button><button type="button" onClick={() => goTo(activeImage + 1)} aria-label="Foto berikutnya" className="absolute right-4 grid h-10 w-10 place-items-center rounded-full bg-black/50 text-xl text-white transition hover:bg-black/70">›</button><div className="absolute bottom-4 flex gap-2">{images.map((image, index) => <button key={image.id} type="button" onClick={() => goTo(index)} aria-label={`Tampilkan foto ${index + 1}`} className={`h-2.5 rounded-full transition-all ${index === activeImage ? 'w-7 bg-white' : 'w-2.5 bg-white/60'}`} />)}</div></>}</div>{images.length > 1 && <div className="mt-3 flex gap-3 overflow-x-auto pb-1">{images.map((image, index) => <button key={image.id} type="button" onClick={() => goTo(index)} className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 ${index === activeImage ? 'border-indigo-600' : 'border-transparent opacity-70 hover:opacity-100'}`}><img src={`/storage/${image.file_path}`} alt={`Thumbnail foto ${index + 1}`} className="h-full w-full object-cover" /></button>)}</div>}</section><div><Link href={route('cars.index')} className="text-sm text-indigo-600">← Kembali ke katalog</Link><p className="mt-5 text-sm text-indigo-600">{vehicle.category.name}</p><h1 className="mt-1 text-4xl font-bold">{vehicle.brand} {vehicle.model}</h1><div className="mt-6 grid grid-cols-2 gap-3 text-sm"><div className="rounded bg-slate-100 p-3">{vehicle.transmission}</div><div className="rounded bg-slate-100 p-3">{vehicle.seat_capacity} kursi</div></div>{vehicle.features?.length > 0 && <section className="mt-6"><h2 className="font-bold text-slate-900">Fitur kendaraan</h2><div className="mt-3 flex flex-wrap gap-2">{vehicle.features.map(feature => <span key={feature.id} className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">✓ {feature.name}</span>)}</div></section>}<div className="mt-8 rounded-xl bg-slate-950 p-6 text-white"><p>Mulai dari</p><p className="mt-1 text-3xl font-bold">Rp {Number(vehicle.daily_price).toLocaleString('id-ID')} / hari</p><Link href={route('booking.create', vehicle.id)} className="mt-5 block w-full rounded bg-indigo-500 py-3 text-center font-semibold">Lanjut booking</Link></div></div></main></PublicLayout>;
+}
