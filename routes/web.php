@@ -19,8 +19,8 @@ use App\Http\Controllers\Webhook\PaymentWebhookController;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\AppSetting;
 use App\Models\Booking;
-use App\Models\Invoice;
 use App\Models\MaintenanceSchedule;
+use App\Models\Payment;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,7 +54,7 @@ Route::get('/dashboard', function () {
         return Inertia::render('Customer/Dashboard', ['metrics' => ['bookings' => (clone $bookings)->count(), 'active' => (clone $bookings)->whereIn('status', ['PAID', 'CONFIRMED', 'READY_FOR_PICKUP', 'IN_USE'])->count(), 'pending' => (clone $bookings)->where('status', 'WAITING_PAYMENT')->count(), 'spending' => (clone $bookings)->whereNotIn('status', ['CANCELLED'])->sum('total_amount')], 'recentBookings' => $bookings->latest()->take(5)->get(), 'customerPhoneVerified' => request()->user()->customer?->phone_verified_at !== null, 'customerKtpVerified' => request()->user()->customer?->ktp_verified_at !== null]);
     }
 
-    return Inertia::render('Dashboard', ['metrics' => ['bookings' => Booking::count(), 'revenue' => Invoice::where('status', 'PAID')->sum('paid_amount'), 'vehiclesInUse' => Vehicle::where('status', VehicleStatus::IN_USE)->count(), 'maintenanceDue' => MaintenanceSchedule::whereIn('status', ['DUE_SOON', 'OVERDUE'])->count()]]);
+    return Inertia::render('Dashboard', ['metrics' => ['bookings' => Booking::count(), 'revenue' => Payment::whereIn('status', ['PAID', 'SUCCEEDED'])->sum('amount'), 'vehiclesInUse' => Vehicle::where('status', VehicleStatus::IN_USE)->count(), 'maintenanceDue' => MaintenanceSchedule::whereIn('status', ['DUE_SOON', 'OVERDUE'])->count()]]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
