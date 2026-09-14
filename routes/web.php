@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:super-admin,admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::post('bookings/{booking}/cash-settlement', [AdminBookingController::class, 'cashSettlement'])->name('bookings.cash-settlement');
+    Route::post('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('bookings.cancel');
     Route::resource('bookings', AdminBookingController::class)->only(['index', 'show']);
     Route::get('customers', [AdminCustomerController::class, 'index'])->name('customers.index');
     Route::get('reports/financial', [FinancialReportController::class, 'index'])->name('reports.financial');
