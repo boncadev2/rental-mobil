@@ -7,6 +7,7 @@ return [
     'whatsapp' => [
         'base_url' => env('WA_GATEWAY_URL'),
         'api_key' => env('WA_GATEWAY_API_KEY'),
+        'session_id' => env('WA_GATEWAY_SESSION_ID'),
         'admin_phone' => env('WA_ADMIN_PHONE'),
     ],
 

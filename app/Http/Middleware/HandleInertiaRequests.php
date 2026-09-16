@@ -37,7 +37,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
             ],
-            'settings' => fn () => \App\Models\AppSetting::values(),
+            'settings' => fn () => \App\Models\AppSetting::values(['whatsapp_session_id', 'whatsapp_admin_phone']),
         ];
     }
 }

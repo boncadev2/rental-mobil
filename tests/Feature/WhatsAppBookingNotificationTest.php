@@ -20,6 +20,7 @@ class WhatsAppBookingNotificationTest extends TestCase
         config()->set('services.whatsapp', [
             'base_url' => 'https://wa.gadstudio.cloud',
             'api_key' => 'test-api-key',
+            'session_id' => 'sales_2',
             'admin_phone' => '081200000000',
         ]);
 
@@ -31,6 +32,7 @@ class WhatsAppBookingNotificationTest extends TestCase
         Http::assertSent(function ($request) {
             return $request->url() === 'https://wa.gadstudio.cloud/api/send-text'
                 && $request->hasHeader('x-api-key', 'test-api-key')
+                && $request->data()['session_id'] === 'sales_2'
                 && $request->data()['to'] === '628123456789'
                 && str_contains($request->data()['message'], 'Booking Anda berhasil dibuat');
         });

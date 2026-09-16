@@ -30,7 +30,7 @@ Route::get('/', function () {
     return Inertia::render('Public/Home', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'featuredVehicles' => Vehicle::query()->with(['category', 'images'])->where('featured', true)->take(3)->get(), 'settings' => AppSetting::values(),
+        'featuredVehicles' => Vehicle::query()->with(['category', 'images'])->where('featured', true)->take(3)->get(), 'settings' => AppSetting::values(['whatsapp_session_id', 'whatsapp_admin_phone']),
     ]);
 });
 

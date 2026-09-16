@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppSetting;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +18,7 @@ class WhatsAppBookingNotificationService
             $this->send($customerPhone, $this->customerMessage($booking));
         }
 
-        $adminPhone = $this->normalizePhone(config('services.whatsapp.admin_phone'));
+        $adminPhone = $this->normalizePhone(AppSetting::value('whatsapp_admin_phone') ?: config('services.whatsapp.admin_phone'));
         if ($adminPhone !== null) {
             $this->send($adminPhone, $this->adminMessage($booking));
         }
@@ -27,8 +28,9 @@ class WhatsAppBookingNotificationService
     {
         $baseUrl = rtrim((string) config('services.whatsapp.base_url'), '/');
         $apiKey = config('services.whatsapp.api_key');
+        $sessionId = AppSetting::value('whatsapp_session_id') ?: config('services.whatsapp.session_id');
 
-        if ($baseUrl === '' || blank($apiKey)) {
+        if ($baseUrl === '' || blank($apiKey) || blank($sessionId)) {
             Log::warning('WhatsApp booking notification was skipped because the gateway is not configured.');
 
             return;
@@ -39,6 +41,7 @@ class WhatsAppBookingNotificationService
                 ->timeout(10)
                 ->withHeaders(['x-api-key' => $apiKey])
                 ->post("{$baseUrl}/api/send-text", [
+                    'session_id' => $sessionId,
                     'to' => $phone,
                     'message' => $message,
                 ]);
