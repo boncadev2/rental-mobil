@@ -26,6 +26,9 @@ export default function Show({booking, invoice, payments, checkout, checkin}) {
     const confirmCancellation = () => {
         setSubmittingCancel(true);
         router.post(route('admin.bookings.cancel', booking.id), {}, {
+            onSuccess: () => {
+                setCancelModalOpen(false);
+            },
             onFinish: () => setSubmittingCancel(false),
         });
     };
@@ -56,7 +59,7 @@ export default function Show({booking, invoice, payments, checkout, checkin}) {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-2xl text-red-700">!</div>
                 <p className="mt-5 text-sm font-bold text-red-700">KONFIRMASI PEMBATALAN</p>
                 <h2 id="cancel-booking-title" className="mt-1 text-2xl font-black text-slate-900">Batalkan booking ini?</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Booking akan dibatalkan dan kendaraan kembali tersedia. Pembatalan ini tidak membuat refund pembayaran secara otomatis.</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">Booking akan dibatalkan dan kendaraan kembali tersedia. DP yang sudah dibayar dinyatakan hangus dan tidak dikembalikan.</p>
                 <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm"><p className="text-slate-500">Kode booking</p><p className="mt-1 font-black text-slate-900">{booking.booking_code}</p></div>
                 <div className="mt-6 flex gap-3"><button type="button" disabled={submittingCancel} onClick={() => setCancelModalOpen(false)} className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-700 disabled:opacity-50">Kembali</button><button type="button" disabled={submittingCancel} onClick={confirmCancellation} className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-bold text-white disabled:opacity-50">{submittingCancel ? 'Membatalkan...' : 'Ya, batalkan'}</button></div>
             </div>

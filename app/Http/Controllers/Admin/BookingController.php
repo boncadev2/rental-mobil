@@ -30,12 +30,26 @@ class BookingController extends Controller
 
     public function cancel(Booking $booking): RedirectResponse
     {
-        if (! in_array($booking->status, [BookingStatus::CONFIRMED, BookingStatus::READY_FOR_PICKUP], true)) {
-            throw ValidationException::withMessages(['booking' => 'Hanya booking yang belum checkout yang dapat dibatalkan.']);
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($booking): void {
+            $booking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
-        $booking->update(['status' => BookingStatus::CANCELLED]);
+            if (! in_array($booking->status, [BookingStatus::CONFIRMED, BookingStatus::READY_FOR_PICKUP], true)) {
+                throw ValidationException::withMessages(['booking' => 'Hanya booking yang belum checkout yang dapat dibatalkan.']);
+            }
 
-        return to_route('admin.bookings.show', $booking)->with('success', 'Booking dibatalkan. Kendaraan kembali tersedia untuk tanggal tersebut.');
+            $invoice = Invoice::query()->lockForUpdate()->where('booking_id', $booking->id)->first();
+
+            if ($invoice && (float) $invoice->balance <= 0 && (float) $invoice->paid_amount > 0) {
+                throw ValidationException::withMessages(['booking' => 'Booking sudah lunas. Proses refund harus ditangani secara manual sebelum pembatalan.']);
+            }
+
+            $booking->update(['status' => BookingStatus::CANCELLED]);
+
+            if ($invoice) {
+                $invoice->update(['status' => 'CANCELLED']);
+            }
+        });
+
+        return to_route('admin.bookings.show', $booking)->with('success', 'Booking dibatalkan. DP yang telah dibayar dinyatakan hangus dan kendaraan kembali tersedia.');
     }
 }

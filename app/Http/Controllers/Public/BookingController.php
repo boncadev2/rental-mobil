@@ -7,6 +7,7 @@ use App\Http\Requests\StoreBookingRequest;
 use App\Models\Vehicle;
 use App\Services\BookingService;
 use App\Services\VehicleAvailabilityService;
+use App\Services\WhatsAppBookingNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,10 +51,11 @@ class BookingController extends Controller
         ]);
     }
 
-    public function store(StoreBookingRequest $request, BookingService $service): JsonResponse
+    public function store(StoreBookingRequest $request, BookingService $service, WhatsAppBookingNotificationService $whatsApp): JsonResponse
     {
         $data = $request->validated();
         $booking = $service->create([...$data, 'user_id' => $request->user()->id]);
+        $whatsApp->sendBookingCreated($booking);
 
         return response()->json([
             'booking_code' => $booking->booking_code,

@@ -4,6 +4,12 @@ return [
     'payment' => ['webhook_secret' => env('PAYMENT_WEBHOOK_SECRET', 'local-payment-secret')],
     'xendit' => ['secret_key' => env('XENDIT_SECRET_KEY'), 'webhook_token' => env('XENDIT_WEBHOOK_TOKEN')],
 
+    'whatsapp' => [
+        'base_url' => env('WA_GATEWAY_URL'),
+        'api_key' => env('WA_GATEWAY_API_KEY'),
+        'admin_phone' => env('WA_ADMIN_PHONE'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
