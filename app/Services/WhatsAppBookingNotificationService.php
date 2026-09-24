@@ -15,7 +15,10 @@ class WhatsAppBookingNotificationService
 
         $customerPhone = $this->normalizePhone($booking->customer?->phone);
         if ($customerPhone !== null) {
-            $this->send($customerPhone, $this->customerMessage($booking));
+            $success = $this->send($customerPhone, $this->customerMessage($booking));
+            if ($success) {
+                $booking->update(['whatsapp_notification_sent' => true]);
+            }
         }
 
         $adminPhone = $this->normalizePhone(AppSetting::value('whatsapp_admin_phone') ?: config('services.whatsapp.admin_phone'));
@@ -24,40 +27,61 @@ class WhatsAppBookingNotificationService
         }
     }
 
-    private function send(string $phone, string $message): void
+    public function sendVerificationCode(string $phone, string $code, ?string $customerName = null): bool
     {
-        $baseUrl = rtrim((string) config('services.whatsapp.base_url'), '/');
-        $apiKey = config('services.whatsapp.api_key');
+        $targetPhone = $this->normalizePhone($phone);
+        if ($targetPhone === null) {
+            return false;
+        }
+
+        $greeting = $customerName ? "Halo {$customerName},\n\n" : "Halo,\n\n";
+        $message = "{$greeting}Kode verifikasi akun Anda adalah: *{$code}*\n\nKode ini berlaku selama 10 menit. Masukkan kode ini pada halaman verifikasi profil untuk mengaktifkan akun Anda.";
+
+        return $this->send($targetPhone, $message);
+    }
+
+    private function send(string $phone, string $message): bool
+    {
+        $baseUrl = rtrim((string) (AppSetting::value('whatsapp_gateway_url') ?: config('services.whatsapp.base_url')), '/');
+        $apiKey = AppSetting::value('whatsapp_api_key') ?: config('services.whatsapp.api_key');
         $sessionId = AppSetting::value('whatsapp_session_id') ?: config('services.whatsapp.session_id');
 
-        if ($baseUrl === '' || blank($apiKey) || blank($sessionId)) {
-            Log::warning('WhatsApp booking notification was skipped because the gateway is not configured.');
-
-            return;
+        if ($baseUrl === '' || blank($apiKey)) {
+            Log::warning('WhatsApp notification was skipped because the gateway is not configured.');
+            return false;
         }
 
         try {
+            $payload = [
+                'to' => $phone,
+                'message' => $message,
+            ];
+
+            if (!blank($sessionId)) {
+                $payload['session_id'] = $sessionId;
+            }
+
             $response = Http::acceptJson()
                 ->timeout(10)
                 ->withHeaders(['x-api-key' => $apiKey])
-                ->post("{$baseUrl}/api/send-text", [
-                    'session_id' => $sessionId,
-                    'to' => $phone,
-                    'message' => $message,
-                ]);
+                ->post("{$baseUrl}/api/send-text", $payload);
 
             if ($response->failed()) {
-                Log::warning('WhatsApp booking notification failed.', [
+                Log::warning('WhatsApp notification failed.', [
                     'phone' => $phone,
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
+                return false;
             }
+            
+            return true;
         } catch (\Throwable $exception) {
-            Log::warning('WhatsApp booking notification could not be sent.', [
+            Log::warning('WhatsApp notification could not be sent.', [
                 'phone' => $phone,
                 'exception' => $exception->getMessage(),
             ]);
+            return false;
         }
     }
 

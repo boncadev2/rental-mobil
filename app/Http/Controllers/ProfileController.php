@@ -38,14 +38,39 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function sendWhatsAppVerification(Request $request): JsonResponse
+    public function sendWhatsAppVerification(Request $request, \App\Services\WhatsAppBookingNotificationService $whatsappService): JsonResponse
     {
         $customer = $request->user()->customer;
         abort_unless($customer, 404);
-        $code = (string) random_int(100000, 999999);
-        $customer->update(['phone_verification_code' => $code, 'phone_verification_expires_at' => now()->addMinutes(10)]);
 
-        return response()->json(['message' => 'Kode verifikasi dibuat untuk nomor WhatsApp Anda.', 'demo_code' => $code]);
+        if (!$customer->phone) {
+            return response()->json(['message' => 'Nomor WhatsApp belum terdaftar pada profil Anda.'], 422);
+        }
+
+        $code = (string) random_int(100000, 999999);
+        $customer->update([
+            'phone_verification_code' => $code,
+            'phone_verification_expires_at' => now()->addMinutes(10)
+        ]);
+
+        $sent = $whatsappService->sendVerificationCode(
+            $customer->phone,
+            $code,
+            $customer->full_name ?: $request->user()->name
+        );
+
+        if ($sent) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Kode verifikasi berhasil dikirim ke nomor WhatsApp Anda (' . $customer->phone . ').'
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Gagal mengirim pesan WhatsApp. Pastikan nomor Anda terdaftar WhatsApp atau hubungi admin.',
+            'demo_code' => app()->environment('local') ? $code : null
+        ], 500);
     }
 
     public function verifyWhatsApp(Request $request): JsonResponse

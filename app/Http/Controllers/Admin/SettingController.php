@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 class SettingController extends Controller
 {
-    private const DEFAULTS = ['company_name' => 'RentalMobil', 'hero_title' => 'Mau pergi ke mana hari ini?', 'hero_subtitle' => 'Satu aplikasi untuk semua kebutuhan perjalanan Anda.', 'hero_image' => '', 'primary_color' => '#0284c7', 'driver_in_city' => '150000', 'driver_out_city' => '225000', 'company_address' => '', 'company_location' => '', 'company_phone' => '', 'company_whatsapp' => '', 'social_instagram' => '', 'social_facebook' => '', 'social_tiktok' => '', 'whatsapp_session_id' => '', 'whatsapp_admin_phone' => ''];
+    private const DEFAULTS = ['company_name' => 'RentalMobil', 'hero_title' => 'Mau pergi ke mana hari ini?', 'hero_subtitle' => 'Satu aplikasi untuk semua kebutuhan perjalanan Anda.', 'hero_image' => '', 'primary_color' => '#0284c7', 'driver_in_city' => '150000', 'driver_out_city' => '225000', 'company_address' => '', 'company_location' => '', 'company_phone' => '', 'company_whatsapp' => '', 'social_instagram' => '', 'social_facebook' => '', 'social_tiktok' => '', 'whatsapp_gateway_url' => '', 'whatsapp_api_key' => '', 'whatsapp_session_id' => '', 'whatsapp_admin_phone' => ''];
 
     public function edit()
     {
@@ -19,7 +19,7 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $data = $request->validate(['company_name' => 'required|string|max:100', 'hero_title' => 'required|string|max:160', 'hero_subtitle' => 'nullable|string|max:255', 'hero_image' => 'nullable|image|max:5120', 'primary_color' => 'required|string|max:20', 'driver_in_city' => 'required|integer|min:0', 'driver_out_city' => 'required|integer|min:0', 'company_address' => 'nullable|string|max:500', 'company_location' => 'nullable|string|max:255', 'company_phone' => 'nullable|string|max:30', 'company_whatsapp' => 'nullable|string|max:30', 'social_instagram' => 'nullable|string|max:255', 'social_facebook' => 'nullable|string|max:255', 'social_tiktok' => 'nullable|string|max:255', 'whatsapp_session_id' => 'nullable|string|max:100', 'whatsapp_admin_phone' => 'nullable|string|max:30']);
+        $data = $request->validate(['company_name' => 'required|string|max:100', 'hero_title' => 'required|string|max:160', 'hero_subtitle' => 'nullable|string|max:255', 'hero_image' => 'nullable|image|max:5120', 'primary_color' => 'required|string|max:20', 'driver_in_city' => 'required|integer|min:0', 'driver_out_city' => 'required|integer|min:0', 'company_address' => 'nullable|string|max:500', 'company_location' => 'nullable|string|max:255', 'company_phone' => 'nullable|string|max:30', 'company_whatsapp' => 'nullable|string|max:30', 'social_instagram' => 'nullable|string|max:255', 'social_facebook' => 'nullable|string|max:255', 'social_tiktok' => 'nullable|string|max:255', 'whatsapp_gateway_url' => 'nullable|url|max:255', 'whatsapp_api_key' => 'nullable|string|max:255', 'whatsapp_session_id' => 'nullable|string|max:100', 'whatsapp_admin_phone' => 'nullable|string|max:30']);
 
         if ($request->hasFile('hero_image')) {
             $data['hero_image'] = Storage::disk('public')->url($request->file('hero_image')->store('hero', 'public'));

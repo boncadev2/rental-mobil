@@ -30,7 +30,7 @@ Route::get('/', function () {
     return Inertia::render('Public/Home', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'featuredVehicles' => Vehicle::query()->with(['category', 'images'])->where('featured', true)->take(3)->get(), 'settings' => AppSetting::values(['whatsapp_session_id', 'whatsapp_admin_phone']),
+        'featuredVehicles' => Vehicle::query()->with(['category', 'images'])->where('featured', true)->take(3)->get(), 'settings' => AppSetting::values(['whatsapp_gateway_url', 'whatsapp_api_key', 'whatsapp_session_id', 'whatsapp_admin_phone']),
     ]);
 });
 
@@ -41,8 +41,8 @@ Route::get('/cars/{vehicle}', [PublicVehicleController::class, 'show'])->name('c
 Route::post('/booking', [BookingController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('booking.store');
 Route::get('/booking/{vehicle}/availability', [BookingController::class, 'availability'])->name('booking.availability');
 Route::get('/booking/{vehicle}', [BookingController::class, 'create'])->name('booking.create');
-Route::get('/payment/{booking}', [PaymentController::class, 'show'])->name('payment.show');
-Route::post('/payment/{booking}', [PaymentController::class, 'create'])->name('payment.create');
+Route::get('/payment/{booking}', [PaymentController::class, 'show'])->middleware('auth')->name('payment.show');
+Route::post('/payment/{booking}', [PaymentController::class, 'create'])->middleware('auth')->name('payment.create');
 Route::get('/my-bookings', [MyBookingController::class, 'index'])->middleware('auth')->name('my-bookings.index');
 Route::get('/my-bookings/{booking}', [MyBookingController::class, 'show'])->middleware('auth')->name('my-bookings.show');
 Route::post('/my-bookings/{booking}/return-request', [MyBookingController::class, 'requestReturn'])->middleware('auth')->name('my-bookings.return-request');
@@ -77,6 +77,7 @@ Route::middleware(['auth', 'role:super-admin,admin'])->prefix('admin')->name('ad
     Route::post('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('bookings.cancel');
     Route::resource('bookings', AdminBookingController::class)->only(['index', 'show']);
     Route::get('customers', [AdminCustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/{customer}/ktp', [AdminCustomerController::class, 'showKtp'])->name('customers.ktp');
     Route::get('reports/financial', [FinancialReportController::class, 'index'])->name('reports.financial');
     Route::get('maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
     Route::get('maintenance/create', [MaintenanceController::class, 'create'])->name('maintenance.create');

@@ -21,4 +21,17 @@ class CustomerController extends Controller
             'search' => $search,
         ]);
     }
+
+    public function showKtp(Customer $customer)
+    {
+        if (!$customer->ktp_file_path) {
+            abort(404, 'KTP tidak ditemukan (Belum diunggah).');
+        }
+
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($customer->ktp_file_path)) {
+            abort(404, 'File KTP fisik tidak ditemukan di server (Mungkin terhapus atau tidak ikut tersalin ke Docker lokal).');
+        }
+
+        return response()->file(\Illuminate\Support\Facades\Storage::disk('local')->path($customer->ktp_file_path));
+    }
 }

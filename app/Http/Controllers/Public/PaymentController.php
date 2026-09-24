@@ -15,6 +15,8 @@ class PaymentController extends Controller
 {
     public function show(Booking $booking, PaymentService $payments): Response
     {
+        abort_unless($booking->customer?->user_id === request()->user()?->id, 403);
+
         $payment = Payment::query()->where('booking_id', $booking->id)->latest()->first();
 
         if ($payment) {
@@ -26,6 +28,8 @@ class PaymentController extends Controller
 
     public function create(Request $request, Booking $booking, PaymentService $payments): JsonResponse
     {
+        abort_unless($booking->customer?->user_id === $request->user()?->id, 403);
+
         $data = $request->validate(['method' => ['required', 'in:QRIS,VA'], 'payment_type' => ['required', 'in:DP,FULL']]);
         $payment = $payments->create($booking, $data['method'], $data['payment_type']);
         return response()->json(['payment' => $payment]);
