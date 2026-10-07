@@ -14,9 +14,17 @@ class PaymentWebhookController extends Controller
         $data = $request->input('data', []);
         $reference = $data['reference_id'] ?? $request->input('reference_id');
         $transaction = $data['payment_id'] ?? $data['payment_session_id'] ?? $request->input('payment_id');
-        $status = $data['status'] ?? $request->input('status');
+        $status = strtoupper((string) ($data['status'] ?? $request->input('status')));
         $event = $request->input('event');
         $isPaid = in_array($status, ['SUCCEEDED', 'SUCCEEDDED', 'PAID', 'COMPLETED'], true) || $event === 'payment_session.completed';
+
+        if (! $isPaid && (in_array($status, ['EXPIRED', 'CANCELED', 'CANCELLED'], true) || $event === 'payment_session.expired')) {
+            if ($reference) {
+                Payment::where('payment_code', $reference)->where('status', 'PENDING')->update(['status' => 'EXPIRED']);
+            }
+            return response()->json(['message' => 'Payment expired recorded']);
+        }
+
         abort_unless($reference && $transaction && $isPaid, 422);
         return response()->json($payments->webhook(['payment_code' => $reference, 'transaction_id' => $transaction, 'status' => 'PAID', 'xendit_event' => $event]));
     }

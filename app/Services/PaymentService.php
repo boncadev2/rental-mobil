@@ -13,12 +13,20 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentService
 {
-    public function create(Booking $booking, string $method, string $paymentType = 'FULL'): Payment
+    public function create(Booking $booking, string $method = 'ONLINE', string $paymentType = 'FULL'): Payment
     {
         $invoice = Invoice::firstOrCreate(['booking_id' => $booking->id], ['invoice_number' => 'INV-'.str()->upper(str()->random(10)), 'total' => $booking->total_amount, 'balance' => $booking->total_amount]);
         if ($invoice->balance <= 0) throw ValidationException::withMessages(['payment' => 'Booking ini sudah lunas.']);
+        if ($paymentType === 'DP' && $invoice->paid_amount > 0) {
+            $paymentType = 'FULL';
+        }
         $amount = $paymentType === 'DP' ? (int) ceil($booking->total_amount * 0.1) : (float) $invoice->balance;
-        if ($paymentType === 'DP' && $invoice->paid_amount > 0) throw ValidationException::withMessages(['payment' => 'DP sudah dibayarkan. Silakan pilih pelunasan.']);
+
+        Payment::query()
+            ->where('booking_id', $booking->id)
+            ->where('status', 'PENDING')
+            ->update(['status' => 'EXPIRED']);
+
         $payment = Payment::create(['booking_id' => $booking->id, 'invoice_id' => $invoice->id, 'payment_code' => 'PAY-'.str()->upper(str()->random(10)), 'method' => $method, 'payment_type' => $paymentType, 'amount' => $amount]);
         if (config('services.xendit.secret_key') && ! app()->environment('testing')) {
             $returnUrl = rtrim((string) config('app.url'), '/').'/payment/'.$booking->id;
@@ -43,17 +51,31 @@ class PaymentService
         }
 
         $session = $response->json();
+        $status = strtoupper((string) ($session['status'] ?? ''));
 
-        if (($session['status'] ?? null) !== 'COMPLETED' || ($session['reference_id'] ?? null) !== $payment->payment_code) {
-            return $payment;
+        if ($status === 'COMPLETED' && ($session['reference_id'] ?? null) === $payment->payment_code) {
+            return $this->webhook([
+                'payment_code' => $payment->payment_code,
+                'transaction_id' => $session['payment_id'] ?? $session['payment_session_id'] ?? $payment->gateway_transaction_id,
+                'status' => 'PAID',
+                'xendit_event' => 'payment_session.reconciled',
+            ]);
         }
 
-        return $this->webhook([
-            'payment_code' => $payment->payment_code,
-            'transaction_id' => $session['payment_id'] ?? $session['payment_session_id'] ?? $payment->gateway_transaction_id,
-            'status' => 'PAID',
-            'xendit_event' => 'payment_session.reconciled',
-        ]);
+        if (in_array($status, ['EXPIRED', 'CANCELED', 'CANCELLED'], true)) {
+            $payment->update([
+                'status' => 'EXPIRED',
+                'gateway_response' => $session,
+            ]);
+
+            $booking = $payment->booking;
+            $invoice = $booking?->invoice;
+            if ($invoice && (float) $invoice->balance > 0) {
+                return $this->create($booking, $payment->method ?: 'ONLINE', $payment->payment_type ?: 'FULL');
+            }
+        }
+
+        return $payment;
     }
 
     public function recordCashSettlement(Booking $booking): Payment

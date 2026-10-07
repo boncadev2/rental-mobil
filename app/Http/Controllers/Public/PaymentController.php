@@ -23,7 +23,18 @@ class PaymentController extends Controller
             $payment = $payments->reconcile($payment);
         }
 
-        return Inertia::render('Public/Payment/Show', ['booking' => $booking->fresh()->load('vehicle'), 'invoice' => \App\Models\Invoice::query()->where('booking_id', $booking->id)->first(), 'payment' => $payment, 'selectedPaymentType' => request('payment_type') === 'FULL' ? 'FULL' : 'DP']);
+        $invoice = \App\Models\Invoice::query()->where('booking_id', $booking->id)->first();
+
+        if ($payment && $payment->status === 'EXPIRED' && $invoice && (float) $invoice->balance > 0) {
+            $payment = $payments->create($booking, $payment->method ?: 'ONLINE', $payment->payment_type ?: 'FULL');
+        }
+
+        return Inertia::render('Public/Payment/Show', [
+            'booking' => $booking->fresh()->load('vehicle'),
+            'invoice' => $invoice,
+            'payment' => $payment,
+            'selectedPaymentType' => request('payment_type') === 'FULL' ? 'FULL' : 'DP'
+        ]);
     }
 
     public function create(Request $request, Booking $booking, PaymentService $payments): JsonResponse
