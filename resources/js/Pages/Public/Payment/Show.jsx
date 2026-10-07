@@ -25,7 +25,7 @@ export default function Show({booking, invoice, payment: initialPayment, selecte
         return () => window.clearTimeout(redirect);
     }, [isPaid]);
 
-    const choose = async method => {
+    const handlePayment = async (method = 'ONLINE') => {
         setLoading(true);
         setError('');
 
@@ -75,7 +75,7 @@ export default function Show({booking, invoice, payment: initialPayment, selecte
                         {invoice && <div className="mt-4 flex justify-between border-t pt-4 text-sm"><span>Sudah dibayar: {money(invoice.paid_amount)}</span><b>Sisa tagihan: {money(balance)}</b></div>}
                     </div>
                     {error && <p className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
-                    {payment?.status === 'PENDING' && payment.qr_string ? <div className="mt-7 rounded-2xl bg-indigo-50 p-6 text-center"><p className="font-bold">Checkout Xendit sudah dibuat</p><p className="mt-1 text-sm text-slate-600">{payment.payment_type === 'DP' ? 'Pembayaran DP 10%' : 'Pembayaran pelunasan'} · {money(payment.amount)}</p><a href={payment.qr_string} className="mt-4 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white">Lanjutkan ke Xendit</a></div> : balance > 0 ? <div className="mt-7"><div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"><p className="text-sm font-bold text-indigo-700">{label.toUpperCase()}</p><p className="mt-2 text-3xl font-black text-slate-900">{money(amount)}</p><p className="mt-1 text-sm text-slate-600">Nominal ini mengikuti pilihan yang Anda buat pada form booking.</p></div><h2 className="mt-6 font-bold">Pilih metode pembayaran</h2><div className="mt-3 grid gap-3 sm:grid-cols-2"><button disabled={loading} onClick={() => choose('QRIS')} className="rounded-2xl border-2 border-slate-200 p-5 text-left hover:border-indigo-500 disabled:opacity-50"><b>QRIS</b><p className="mt-1 text-sm text-slate-500">Lanjut ke checkout aman Xendit.</p></button><button disabled={loading} onClick={() => choose('VA')} className="rounded-2xl border-2 border-slate-200 p-5 text-left hover:border-indigo-500 disabled:opacity-50"><b>Virtual Account</b><p className="mt-1 text-sm text-slate-500">Lanjut ke checkout aman Xendit.</p></button></div></div> : null}
+                    {payment?.status === 'PENDING' && payment.qr_string ? <div className="mt-7 rounded-2xl bg-indigo-50 p-6 text-center"><p className="font-bold">Checkout Xendit sudah dibuat</p><p className="mt-1 text-sm text-slate-600">{payment.payment_type === 'DP' ? 'Pembayaran DP 10%' : 'Pembayaran pelunasan'} · {money(payment.amount)}</p><a href={payment.qr_string} className="mt-4 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white">Bayar Sekarang</a></div> : balance > 0 ? <div className="mt-7"><div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5"><p className="text-sm font-bold text-indigo-700">{label.toUpperCase()}</p><p className="mt-2 text-3xl font-black text-slate-900">{money(amount)}</p><p className="mt-1 text-sm text-slate-600">Nominal ini mengikuti pilihan yang Anda buat pada form booking.</p></div><button type="button" disabled={loading} onClick={() => handlePayment('ONLINE')} className="mt-6 w-full rounded-2xl bg-indigo-600 px-6 py-4 text-center font-bold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-700 disabled:opacity-50">{loading ? 'Memproses...' : 'Bayar Sekarang'}</button></div> : null}
                 </>}
             </div>
         </main>

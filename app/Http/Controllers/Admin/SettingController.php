@@ -22,7 +22,8 @@ class SettingController extends Controller
         $data = $request->validate(['company_name' => 'required|string|max:100', 'hero_title' => 'required|string|max:160', 'hero_subtitle' => 'nullable|string|max:255', 'hero_image' => 'nullable|image|max:5120', 'primary_color' => 'required|string|max:20', 'driver_in_city' => 'required|integer|min:0', 'driver_out_city' => 'required|integer|min:0', 'company_address' => 'nullable|string|max:500', 'company_location' => 'nullable|string|max:255', 'company_phone' => 'nullable|string|max:30', 'company_whatsapp' => 'nullable|string|max:30', 'social_instagram' => 'nullable|string|max:255', 'social_facebook' => 'nullable|string|max:255', 'social_tiktok' => 'nullable|string|max:255', 'whatsapp_gateway_url' => 'nullable|url|max:255', 'whatsapp_api_key' => 'nullable|string|max:255', 'whatsapp_session_id' => 'nullable|string|max:100', 'whatsapp_admin_phone' => 'nullable|string|max:30']);
 
         if ($request->hasFile('hero_image')) {
-            $data['hero_image'] = Storage::disk('public')->url($request->file('hero_image')->store('hero', 'public'));
+            $path = $request->file('hero_image')->store('hero', 'public');
+            $data['hero_image'] = '/storage/' . $path;
         } else {
             unset($data['hero_image']);
         }

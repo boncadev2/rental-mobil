@@ -30,8 +30,11 @@ class PaymentController extends Controller
     {
         abort_unless($booking->customer?->user_id === $request->user()?->id, 403);
 
-        $data = $request->validate(['method' => ['required', 'in:QRIS,VA'], 'payment_type' => ['required', 'in:DP,FULL']]);
-        $payment = $payments->create($booking, $data['method'], $data['payment_type']);
+        $data = $request->validate([
+            'method' => ['sometimes', 'nullable', 'string', 'in:QRIS,VA,ONLINE,XENDIT'],
+            'payment_type' => ['required', 'in:DP,FULL'],
+        ]);
+        $payment = $payments->create($booking, $data['method'] ?? 'ONLINE', $data['payment_type']);
         return response()->json(['payment' => $payment]);
     }
 }
